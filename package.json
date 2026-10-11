@@ -1,0 +1,14 @@
+{
+  "name": "quedaco-jornal-da-queda",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "package": "node tools/package.mjs",
+    "preview": "node tools/preview.mjs",
+    "release": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/release.ps1",
+    "lint:css": "stylelint styles/*.css"
+  },
+  "devDependencies": { "stylelint": "^17.15.0" }
+}

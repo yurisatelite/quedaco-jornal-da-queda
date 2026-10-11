@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "declaration-block-no-duplicate-properties": true,
+    "no-empty-source": true,
+    "color-no-invalid-hex": true,
+    "font-family-no-duplicate-names": true,
+    "block-no-empty": true,
+    "no-invalid-position-at-import-rule": true
+  }
+}
