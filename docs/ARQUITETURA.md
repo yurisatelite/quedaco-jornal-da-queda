@@ -1,7 +1,7 @@
 # Arquitetura
 
 - `src/model.mjs`: esquema puro, normalização, visibilidade e edição de exemplo.
-- `src/store.mjs`: persistência mundial via `game.settings`; somente Mestre grava.
+- `src/store.mjs`: arquivo privado em `JournalEntry` sem permissão para jogadores e índice público em `game.settings`; somente Mestre grava.
 - `src/purchase.mjs`: carteira Skyfall e entrega transacional de Item `loot`.
 - `src/app.mjs`: leitor vertical e editor `ApplicationV2`.
 - `src/sidebar.mjs`: botão próprio na barra lateral do Foundry.
