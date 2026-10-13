@@ -1,6 +1,6 @@
 {
   "name": "quedaco-jornal-da-queda",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,5 +10,8 @@
     "release": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/release.ps1",
     "lint:css": "stylelint styles/*.css"
   },
-  "devDependencies": { "stylelint": "^17.15.0" }
+  "devDependencies": {
+    "html2canvas": "^1.4.1",
+    "stylelint": "^17.15.0"
+  }
 }

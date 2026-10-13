@@ -4,6 +4,8 @@ export const RELIABILITIES=['confirmed','distorted','false','clue','propaganda']
 export const STATUS_LABELS={draft:'Rascunho',available:'Disponível',soldout:'Esgotada',archived:'Arquivada'};
 export const RELIABILITY_LABELS={confirmed:'Confirmada',distorted:'Distorcida',false:'Falsa',clue:'Pista',propaganda:'Propaganda'};
 export const SECTION_LABELS={known:'O QUE SE SABE',local:'NOTÍCIAS LOCAIS',rumors:'RUMORES DA RUA',classifieds:'CLASSIFICADOS',wanted:'PROCURA-SE',notices:'AVISOS & OFÍCIOS',editorial:'EDITORIAL',omen:'PRESSÁGIO'};
+export const FEATURE_LABELS={hot:'Notícia quente',wanted:'Procura-se',rumors:'Rumores',market:'Comércio e preços',notices:'Avisos & Ofícios',omen:'Presságio'};
+export const FEATURE_SECTIONS={wanted:'wanted',rumors:'rumors',market:'classifieds',notices:'notices',omen:'omen'};
 
 export const uid=()=>globalThis.crypto?.randomUUID?.()??`issue-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const text=value=>String(value??'').trim();
@@ -18,7 +20,8 @@ export function normalizeBlock(block={},index=0){
 export function normalizeEdition(edition={}){
   const status=STATUSES.includes(edition.status)?edition.status:'draft';
   const pageCount=integer(edition.pageCount,1,3)||1;
-  return {id:text(edition.id)||uid(),title:text(edition.title)||'Edição sem título',number:text(edition.number),date:text(edition.date),region:text(edition.region),place:text(edition.place),vendor:text(edition.vendor),availability:text(edition.availability),price:integer(edition.price),status,pageCount,headline:text(edition.headline),subtitle:text(edition.subtitle),summary:text(edition.summary),image:text(edition.image)||'modules/quedaco-jornal-da-queda/assets/road-north.svg',blocks:Array.from(edition.blocks??[]).map(normalizeBlock).filter(block=>block.title||block.body),gmNotes:text(edition.gmNotes)};
+  const features=Array.from(new Set(Array.from(edition.features??[]).filter(value=>Object.hasOwn(FEATURE_LABELS,value))));
+  return {id:text(edition.id)||uid(),title:text(edition.title)||'Edição sem título',number:text(edition.number),date:text(edition.date),region:text(edition.region),place:text(edition.place),vendor:text(edition.vendor),availability:text(edition.availability),price:integer(edition.price),status,pageCount,features,headline:text(edition.headline),subtitle:text(edition.subtitle),summary:text(edition.summary),image:text(edition.image)||'modules/quedaco-jornal-da-queda/assets/road-north.svg',blocks:Array.from(edition.blocks??[]).map(normalizeBlock).filter(block=>block.title||block.body),gmNotes:text(edition.gmNotes)};
 }
 
 export function normalizeCollection(value={}){
