@@ -6,6 +6,13 @@ export const RELIABILITY_LABELS={confirmed:'Confirmada',distorted:'Distorcida',f
 export const SECTION_LABELS={known:'O QUE SE SABE',local:'NOTÍCIAS LOCAIS',rumors:'RUMORES DA RUA',classifieds:'CLASSIFICADOS',wanted:'PROCURA-SE',notices:'AVISOS & OFÍCIOS',editorial:'EDITORIAL',omen:'PRESSÁGIO'};
 export const FEATURE_LABELS={hot:'Notícia quente',wanted:'Procura-se',rumors:'Rumores',market:'Comércio e preços',notices:'Avisos & Ofícios',omen:'Presságio'};
 export const FEATURE_SECTIONS={wanted:'wanted',rumors:'rumors',market:'classifieds',notices:'notices',omen:'omen'};
+export const EDITION_TEMPLATES={
+  blank:{label:'Em branco',blocks:[]},
+  notices:{label:'Avisos & Ofícios',blocks:[['notices','Ofício da localidade'],['notices','Aviso de circulação']]},
+  local:{label:'Notícias locais',blocks:[['known','O que se sabe'],['local','Notícias locais'],['rumors','Rumores da rua']]},
+  omen:{label:'Presságio',blocks:[['omen','Sinais estranhos'],['rumors','O que a rua comenta'],['known','O que se sabe'],['editorial','Palavra da redação']]},
+  market:{label:'Comércio e estrada',blocks:[['classifieds','Mercado e preços'],['notices','Rotas e avisos'],['local','Movimento local']]}
+};
 
 export const uid=()=>globalThis.crypto?.randomUUID?.()??`issue-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const text=value=>String(value??'').trim();
@@ -20,8 +27,15 @@ export function normalizeBlock(block={},index=0){
 export function normalizeEdition(edition={}){
   const status=STATUSES.includes(edition.status)?edition.status:'draft';
   const pageCount=integer(edition.pageCount,1,3)||1;
+  const legacyAvailability=typeof edition.availability==='string'&&!/^\s*\d+\s*$/.test(edition.availability)&&edition.availability.trim();
   const features=Array.from(new Set(Array.from(edition.features??[]).filter(value=>Object.hasOwn(FEATURE_LABELS,value))));
-  return {id:text(edition.id)||uid(),title:text(edition.title)||'Edição sem título',number:text(edition.number),date:text(edition.date),region:text(edition.region),place:text(edition.place),vendor:text(edition.vendor),availability:text(edition.availability),price:integer(edition.price),status,pageCount,features,headline:text(edition.headline),subtitle:text(edition.subtitle),summary:text(edition.summary),image:text(edition.image)||'modules/quedaco-jornal-da-queda/assets/road-north.svg',blocks:Array.from(edition.blocks??[]).map(normalizeBlock).filter(block=>block.title||block.body),gmNotes:text(edition.gmNotes)};
+  return {id:text(edition.id)||uid(),title:text(edition.title)||'Edição sem título',number:text(edition.number),date:text(edition.date),region:text(edition.region),place:text(edition.place),vendor:text(edition.vendor),writer:text(edition.writer),availability:legacyAvailability?1:integer(edition.availability,0,999),price:integer(edition.price),status,pageCount,features,headline:text(edition.headline),subtitle:text(edition.subtitle),summary:text(edition.summary),image:text(edition.image)||'modules/quedaco-jornal-da-queda/assets/road-north.svg',blocks:Array.from(edition.blocks??[]).map(normalizeBlock).filter(block=>block.title||block.body),gmNotes:text(edition.gmNotes)};
+}
+
+export function templateEdition(templateId='blank',base={}){
+  const template=EDITION_TEMPLATES[templateId]??EDITION_TEMPLATES.blank;
+  const issue=normalizeEdition({...base,blocks:template.blocks.map(([section,title],index)=>({id:uid(),page:Math.min(3,Math.floor(index/2)+1),section,title,body:''}))});
+  return {...issue,pageCount:Math.max(issue.pageCount,Math.min(3,Math.ceil(template.blocks.length/2)||1))};
 }
 
 export function normalizeCollection(value={}){
@@ -44,7 +58,7 @@ export function formatCurrency(total){
 }
 
 export const EXAMPLE_EDITION=normalizeEdition({
-  id:'estrada-do-norte-caiu',title:'Edição local',number:'01',date:'Após a última chuva',region:'Thur Thur',place:'Alberich e Estrada do Norte',vendor:'Tavernas, mercados e vendedores de rua',availability:'Enquanto houver exemplares',price:2,status:'available',pageCount:2,
+  id:'estrada-do-norte-caiu',title:'Edição local',number:'01',date:'Após a última chuva',region:'Thur Thur',place:'Alberich e Estrada do Norte',vendor:'Tavernas, mercados e vendedores de rua',availability:5,price:2,status:'available',pageCount:2,
   headline:'A ESTRADA DO NORTE CAIU',subtitle:'Desabamento isola vilas e faz autoridades prometerem respostas',summary:'Um grande desabamento interrompeu a passagem pela Estrada do Norte. Equipes de reconhecimento foram enviadas, mas moradores afirmam que a montanha ainda se move.',
   blocks:[
     {id:'known',page:1,section:'known',title:'O que se sabe',body:'Trechos inteiros da via desapareceram. Caravanas aguardam autorização para seguir e os primeiros suprimentos já começaram a encarecer.',reliability:'confirmed',secretTruth:'A estrada realmente caiu, mas o desabamento não foi natural.',hook:'Investigar a origem das fendas antes que a passagem seja reaberta.'},
