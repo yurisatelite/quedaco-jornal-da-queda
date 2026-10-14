@@ -21,3 +21,8 @@ Rascunhos, edições salvas e seus bastidores ficam no Journal privado `QUEDAÇO
 No `ready`, o módulo publica em `game.modules.get('quedaco-jornal-da-queda').api` um descriptor com `family: 'quedaco'` e `contractVersion: 1`. As capabilities são `newspaper`, `createEdition`, `purchaseEdition` e `playerJournalDelivery`. Os métodos públicos são `open()` e `getStatus()`; o primeiro abre o Jornal e o segundo retorna somente `{ ready: true }`.
 
 O módulo não reconhece nem exige outros módulos para funcionar. Ele emite `quedaco:register` para que o QUEDAÇO principal ou outro módulo da família possa descobrir o descriptor quando estiver ativo. Todas as funções continuam disponíveis sozinho; nenhuma API pública expõe dados privados ou documentos do mundo.
+
+
+## Geografia central (0.3.6)
+
+Com QUEDAÇO 0.18.0 ativo, usa getWorldCatalog para os seletores. Novas gravações guardam IDs de região/local junto aos nomes; edições antigas continuam legíveis e não são regravadas em massa. Sem a API, conserva o catálogo local. Evento de atualização não substitui o formulário aberto.

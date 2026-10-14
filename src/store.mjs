@@ -1,4 +1,4 @@
-import {EXAMPLE_EDITION,MODULE_ID,normalizeCollection,normalizeEdition,publicEdition} from './model.mjs';
+import {MODULE_ID,SAMPLE_EDITIONS,normalizeCollection,normalizeEdition,publicEdition} from './model.mjs';
 
 let cache=[];
 let privateStore=null;
@@ -11,15 +11,15 @@ async function ensureArchiveFolder(gameRef){
 }
 
 export function registerSettings(gameRef=game){
-  gameRef.settings.register(MODULE_ID,'publicEditions',{name:'Edições públicas do Jornal da Queda',scope:'world',config:false,type:Object,default:{schemaVersion:1,editions:[publicEdition(EXAMPLE_EDITION)]}});
+  gameRef.settings.register(MODULE_ID,'publicEditions',{name:'Edições públicas do Jornal da Queda',scope:'world',config:false,type:Object,default:{schemaVersion:1,editions:SAMPLE_EDITIONS.map(publicEdition)}});
 }
 export async function initializeStore(gameRef=game){
   if(gameRef.user?.isGM){
     const folder=await ensureArchiveFolder(gameRef);
     privateStore=Array.from(gameRef.journal??[]).find(entry=>entry.getFlag?.(MODULE_ID,'privateStore'))??null;
-    if(!privateStore)privateStore=await JournalEntry.create({name:'QUEDAÇO — Arquivo da Mestra',folder:folder.id,ownership:{default:0},flags:{[MODULE_ID]:{privateStore:true,editions:[EXAMPLE_EDITION]}}});
+    if(!privateStore)privateStore=await JournalEntry.create({name:'QUEDAÇO — Arquivo da Mestra',folder:folder.id,ownership:{default:0},flags:{[MODULE_ID]:{privateStore:true,editions:SAMPLE_EDITIONS}}});
     else if(privateStore.folder?.id!==folder.id&&privateStore.folder!==folder.id)await privateStore.update({folder:folder.id});
-    cache=normalizeCollection({editions:privateStore.getFlag(MODULE_ID,'editions')??[EXAMPLE_EDITION]}).editions;
+    cache=normalizeCollection({editions:privateStore.getFlag(MODULE_ID,'editions')??SAMPLE_EDITIONS}).editions;
     await gameRef.settings.set(MODULE_ID,'publicEditions',{schemaVersion:1,editions:cache.filter(issue=>['available','archived'].includes(issue.status)).map(publicEdition)});
   }else cache=normalizeCollection(gameRef.settings.get(MODULE_ID,'publicEditions')).editions;
   return cache;

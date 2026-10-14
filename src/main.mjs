@@ -12,3 +12,5 @@ Hooks.once('ready',async()=>{try{await initializeStore();registerPurchaseSocket(
 Hooks.on('renderSidebar',(application,html)=>installSidebarButton(openNewspaper,application,html));
 Hooks.on('renderApplicationV2',(application,html)=>{if(application===ui.sidebar||application?.constructor?.name==='Sidebar')installSidebarButton(openNewspaper,application,html);});
 Hooks.on('updateSetting',setting=>{if(setting.key!==`${MODULE_ID}.publicEditions`)return;refreshPublicEditions(game.settings.get(MODULE_ID,'publicEditions'));if(newspaper?.rendered)newspaper.render(true);});
+
+Hooks.on('quedaco:catalog-updated',()=>{if(newspaper?.rendered&&newspaper.mode!=='edit')newspaper.render(true);});
