@@ -69,7 +69,7 @@ export class NewspaperApp extends foundry.applications.api.ApplicationV2{
       const file=event.dataTransfer?.files?.[0];let path='';
       if(file){
         if(!file.type.startsWith('image/'))throw Error('Solte um arquivo de imagem.');
-        const FP=globalThis.FilePicker??foundry.applications.apps.FilePicker.implementation;
+        const FP=foundry.applications.apps.FilePicker.implementation;
         try{await FP.createDirectory('data','quedaco-jornal-da-queda');}catch{}
         const uploaded=await FP.upload('data','quedaco-jornal-da-queda',file,{}, {notify:true});path=uploaded?.path??'';
       }else{
@@ -96,7 +96,7 @@ export class NewspaperApp extends foundry.applications.api.ApplicationV2{
     ui.notifications.info(`${pages.length} página(s) exportada(s) em PNG.`);
   }
   async handleClick(event){
-    const target=event.target.closest?.('[data-action]');if(!target)return;event.preventDefault();const action=target.dataset.action,id=target.dataset.id;
+    const target=event.target.closest?.('.qd-shell [data-action]');if(!target)return;event.preventDefault();const action=target.dataset.action,id=target.dataset.id;
     try{
       if(action==='close-app'){await this.close();return;}
       if(action==='select'){this.selectedId=id;this.mode='read';this.draft=null;}
@@ -111,7 +111,7 @@ export class NewspaperApp extends foundry.applications.api.ApplicationV2{
       else if(action==='pick-image'){const FP=foundry.applications.apps.FilePicker.implementation;const current=this.editionFromForm(this.element.querySelector('.qd-editor')).image;new FP({type:'image',current,callback:path=>this.applyImage(path)}).render(true);return;}
       else if(action==='offer'){broadcastOffer(this.selected());return;}
       else if(action==='export-png'){await this.exportPages();return;}
-      else if(action==='delete'){const confirmed=globalThis.Dialog?.confirm?await Dialog.confirm({title:'Apagar edição',content:'<p>Apagar esta edição permanentemente?</p>'}):globalThis.confirm?.('Apagar esta edição permanentemente?');if(!confirmed)return;await removeEdition(id);this.mode='read';this.draft=null;this.selectedId='';this.flash('Edição excluída.');}
+      else if(action==='delete'){const confirmed=foundry.applications.api.DialogV2?.confirm?await foundry.applications.api.DialogV2.confirm({window:{title:'Apagar edição'},rejectClose:false,content:'<p>Apagar esta edição permanentemente?</p>'}):globalThis.confirm?.('Apagar esta edição permanentemente?');if(!confirmed)return;await removeEdition(id);this.mode='read';this.draft=null;this.selectedId='';this.flash('Edição excluída.');}
       else if(action==='buy'){const actorId=this.element.querySelector('[name="buyerActor"]')?.value,actor=game.actors.get(actorId),result=await requestPurchase(actorId,this.selected().id);this.flash(`Exemplar e Journal liberados para ${actor.name}. Saldo: ${formatCurrency(result.remaining)}.`);ui.notifications.info(this.message);}
       await this.rerender();
     }catch(error){this.message=error.message;ui.notifications.error(error.message);await this.rerender();}
