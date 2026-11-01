@@ -1,10 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {wallet,walletTotal,purchaseEdition} from '../src/purchase.mjs';
-import {EXAMPLE_EDITION} from '../src/model.mjs';
+import {EXAMPLE_EDITION as PRIVATE_EXAMPLE} from '../src/model.mjs';
+
+const EXAMPLE_EDITION={...PRIVATE_EXAMPLE,visibility:{mode:'players',userIds:[]}};
 
 test('carteira converte a economia do Skyfall sem perder trocados',()=>{assert.deepEqual(wallet(1234),{k:1,p:23,t:4});assert.equal(walletTotal({k:1,p:23,t:4}),1234);});
-const fakeGame={user:{id:'u1'},users:{get:()=>({id:'u1'}),[Symbol.iterator]:function*(){yield {id:'u1'};} }};
+const fakeGame={user:{id:'u1',isGM:true},users:{get:()=>({id:'u1'}),[Symbol.iterator]:function*(){yield {id:'u1'};} }};
 test('compra desconta, cria loot e libera Journal',async()=>{const actor={type:'character',isOwner:true,system:{currency:{t:5,p:0,k:0}},testUserPermission:()=>true,async update(change){this.system.currency=change['system.currency'];},async createEmbeddedDocuments(type,sources){this.created={type,sources};return [{...sources[0],update:async()=>{}}];}};const result=await purchaseEdition(actor,EXAMPLE_EDITION,{gameRef:fakeGame,journalGrant:async()=>({uuid:'JournalEntry.j1'})});assert.equal(result.remaining,3);assert.equal(result.journal.uuid,'JournalEntry.j1');assert.equal(actor.created.type,'Item');assert.equal(actor.created.sources[0].type,'loot');assert.equal(actor.created.sources[0].flags['quedaco-jornal-da-queda'].editionId,EXAMPLE_EDITION.id);});
 test('falha ao criar o item devolve o dinheiro',async()=>{const actor={type:'character',isOwner:true,system:{currency:{t:5}},async update(change){this.system.currency=change['system.currency'];},async createEmbeddedDocuments(){throw Error('falhou');}};await assert.rejects(purchaseEdition(actor,EXAMPLE_EDITION,{gameRef:fakeGame,journalGrant:async()=>({})}),/falhou/);assert.deepEqual(actor.system.currency,{k:0,p:0,t:5});});
 test('falha ao liberar Journal apaga o item e devolve o dinheiro',async()=>{let deleted=false;const actor={type:'character',isOwner:true,system:{currency:{t:5}},testUserPermission:()=>true,async update(change){this.system.currency=change['system.currency'];},async createEmbeddedDocuments(){return [{async delete(){deleted=true;}}];}};await assert.rejects(purchaseEdition(actor,EXAMPLE_EDITION,{gameRef:fakeGame,journalGrant:async()=>{throw Error('Journal indisponível');}}),/Journal indisponível/);assert.equal(deleted,true);assert.deepEqual(actor.system.currency,{k:0,p:0,t:5});});
+
+test('compras simultâneas não gastam duas vezes o mesmo saldo',async()=>{
+  let items=0;
+  const actor={type:'character',isOwner:true,system:{currency:{t:2}},testUserPermission:()=>true,async update(change){this.system.currency=change['system.currency'];},async createEmbeddedDocuments(){items++;return [{}];}};
+  const options={gameRef:fakeGame,journalGrant:async()=>({uuid:'JournalEntry.j1'})};
+  const results=await Promise.allSettled([purchaseEdition(actor,EXAMPLE_EDITION,options),purchaseEdition(actor,EXAMPLE_EDITION,options)]);
+  assert.equal(results.filter(result=>result.status==='fulfilled').length,1);assert.equal(items,1);assert.equal(walletTotal(actor.system.currency),0);
+});

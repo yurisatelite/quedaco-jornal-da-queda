@@ -2,8 +2,10 @@ import {EDITION_TEMPLATES,FEATURE_LABELS,FEATURE_SECTIONS,MODULE_ID,RELIABILITIE
 import {getGeography} from './geography.mjs';
 import {loadEditions,removeEdition,upsertEdition} from './store.mjs';
 import {ownedCharacters} from './purchase.mjs';
-import {broadcastOffer,requestPurchase} from './socket.mjs';
+import {releasePublication,requestPurchase} from './socket.mjs';
 import {e,multiline} from './escape.mjs';
+import {accessiblePublications} from './journal.mjs';
+import {publicationAccess} from './publication-policy.mjs';
 
 const option=(value,label,current)=>`<option value="${e(value)}" ${value===current?'selected':''}>${e(label)}</option>`;
 const field=(label,name,value,type='text')=>`<label><span>${e(label)}</span><input type="${type}" name="${e(name)}" value="${e(value)}"></label>`;
@@ -19,9 +21,9 @@ export class NewspaperApp extends foundry.applications.api.ApplicationV2{
   async close(options={}){const result=await super.close(options);this.onClosed?.();return result;}
   flash(message){this.message=message;clearTimeout(this.messageTimer);this.messageTimer=setTimeout(()=>{this.message='';if(this.rendered)void this.rerender();},4500);}
   editions(){return loadEditions();}
-  selected(){const list=this.editions(),visible=visibleEditions(list,game.user.isGM);return visible.find(item=>item.id===this.selectedId)??visible[0]??null;}
+  selected(){const list=this.editions(),visible=visibleEditions(list,game.user.isGM,{observerIds:accessiblePublications().map(issue=>issue.id)});return visible.find(item=>item.id===this.selectedId)??visible[0]??null;}
   async _renderHTML(){
-    const editions=visibleEditions(this.editions(),game.user.isGM),selected=this.selected();if(selected&&!this.selectedId)this.selectedId=selected.id;
+    const editions=visibleEditions(this.editions(),game.user.isGM,{observerIds:accessiblePublications().map(issue=>issue.id)}),selected=this.selected();if(selected&&!this.selectedId)this.selectedId=selected.id;
     const list=editions.map(issue=>{const writer=npcCatalog().find(actor=>actor.name===issue.writer);return `<button class="qd-issue-link ${issue.id===selected?.id?'is-active':''}" style="--qd-region:${e(regionColor(issue.region))}" data-action="select" data-id="${e(issue.id)}"><span class="qd-issue-heading">${writer?.img?`<img src="${e(writer.img)}" alt="">`:''}<span><small>${e(issue.region||'Sem região')} · ${e(STATUS_LABELS[issue.status])}</small><strong>${e(issue.headline||issue.title)}</strong><span>${e(issue.number?`Edição ${issue.number}`:issue.date||'Sem data')}</span></span></span></button>`;}).join('');
     return `<div class="qd-shell"><aside class="qd-index"><div class="qd-index-title"><i class="fa-solid fa-newspaper"></i><span><strong>Jornal da Queda</strong><small>A verdade chega amassada, mas chega.</small></span></div>${game.user.isGM?'<button class="qd-primary" data-action="new"><i class="fa-solid fa-plus"></i> Nova edição</button>':''}<div class="qd-issue-list">${list||'<p>Nenhuma edição disponível.</p>'}</div></aside><main class="qd-stage">${this.message?`<p class="qd-message">${e(this.message)}</p>`:''}${this.mode==='edit'&&game.user.isGM?this.renderEditor():this.renderEdition(selected)}</main></div>`;
   }
@@ -30,10 +32,11 @@ export class NewspaperApp extends foundry.applications.api.ApplicationV2{
   rerender(){return this.render(true);}
   renderEdition(issue){
     if(!issue)return '<section class="qd-empty"><i class="fa-regular fa-newspaper"></i><h2>Nenhuma edição disponível</h2><p>A pessoa Mestre ainda não colocou um exemplar em circulação.</p></section>';
+    const access=publicationAccess(issue,game.user,{journalObserver:accessiblePublications().some(item=>item.id===issue.id)});
     const pages=Array.from({length:issue.pageCount},(_,index)=>index+1),actors=ownedCharacters();
-    const paper=pages.map(page=>this.renderPage(issue,page)).join('');
+    const paper=access.read?pages.map(page=>this.renderPage(issue,page)).join(''):'<p class="qd-message">Compre um exemplar para ler esta publicação.</p>';
     const actorPicker=actors.length?`<select name="buyerActor">${actors.map(actor=>option(actor.id,actor.name,actors[0]?.id)).join('')}</select><button data-action="buy" data-id="${e(issue.id)}"><i class="fa-solid fa-coins"></i> Comprar · ${e(formatCurrency(issue.price))}</button>`:'<small>Nenhuma personagem controlada disponível para receber o exemplar.</small>';
-    return `<div class="qd-toolbar" style="--qd-region:${e(regionColor(issue.region))}"><span class="qd-status is-${e(issue.status)}">${e(STATUS_LABELS[issue.status])}</span><span>${e(issue.region||'Sem região definida')}</span><span>${e(issue.place||'Todos os locais')}</span>${issue.vendor?`<span>${e(issue.vendor)}</span>`:''}<span>${issue.availability} exemplar(es)</span>${issue.status==='available'?`<div class="qd-buy">${actorPicker}</div>`:''}${game.user.isGM?`${issue.status==='available'?`<button data-action="offer" data-id="${e(issue.id)}"><i class="fa-solid fa-bullhorn"></i> Oferecer aos jogadores</button>`:''}<button data-action="export-png" data-id="${e(issue.id)}"><i class="fa-solid fa-image"></i> Baixar PNG</button><button data-action="edit" data-id="${e(issue.id)}"><i class="fa-solid fa-pen"></i> Editar</button><button data-action="duplicate" data-id="${e(issue.id)}"><i class="fa-regular fa-copy"></i> Duplicar</button><button class="qd-danger" data-action="delete" data-id="${e(issue.id)}"><i class="fa-solid fa-trash"></i> Apagar</button>`:''}</div><div class="qd-pages">${paper}</div>`;
+    return `<div class="qd-toolbar" style="--qd-region:${e(regionColor(issue.region))}"><span class="qd-status is-${e(issue.status)}">${e(STATUS_LABELS[issue.status])}</span><span>${e(issue.region||'Sem região definida')}</span><span>${e(issue.place||'Todos os locais')}</span>${issue.vendor?`<span>${e(issue.vendor)}</span>`:''}<span>${issue.availability} exemplar(es)</span>${access.buy?`<div class="qd-buy">${actorPicker}</div>`:''}${game.user.isGM?`${issue.kind==='newspaper'&&issue.status==='available'?`<button data-action="offer" data-id="${e(issue.id)}"><i class="fa-solid fa-bullhorn"></i> Oferecer aos jogadores</button>`:''}<button data-action="export-png" data-id="${e(issue.id)}"><i class="fa-solid fa-image"></i> Baixar PNG</button><button data-action="edit" data-id="${e(issue.id)}"><i class="fa-solid fa-pen"></i> Editar</button><button data-action="duplicate" data-id="${e(issue.id)}"><i class="fa-regular fa-copy"></i> Duplicar</button><button class="qd-danger" data-action="delete" data-id="${e(issue.id)}"><i class="fa-solid fa-trash"></i> Apagar</button>`:''}</div><div class="qd-pages">${paper}</div>`;
   }
   renderPage(issue,page){
     const blocks=issue.blocks.filter(block=>block.page===page),isCover=page===1,writer=npcCatalog().find(actor=>actor.name===issue.writer);
@@ -58,7 +61,7 @@ export class NewspaperApp extends foundry.applications.api.ApplicationV2{
     if(!form)return normalizeEdition(this.draft??this.selected()??{});const data=new FormData(form),raw=Object.fromEntries(data.entries()),blocks=[];
     for(let i=0;;i++){if(!data.has(`block.${i}.id`))break;const block={};for(const key of ['id','page','section','title','body','reliability','secretTruth','faction','consequence','hook','deadline'])block[key]=raw[`block.${i}.${key}`]??'';blocks.push(block);}
     const geography=getGeography();raw.regionId=geography.regions.find(r=>r.name===raw.region)?.id??'';raw.placeId=geography.places.find(p=>p.name===raw.place&&(!raw.regionId||p.regionId===raw.regionId))?.id??'';
-    return normalizeEdition({...raw,features:data.getAll('features'),blocks});
+    return normalizeEdition({...this.selected(),...this.draft,...raw,features:data.getAll('features'),blocks});
   }
   async applyImage(path){
     if(!path)return;this.draft=this.editionFromForm(this.element.querySelector('.qd-editor'));this.draft.image=String(path);await this.rerender();
@@ -102,14 +105,14 @@ export class NewspaperApp extends foundry.applications.api.ApplicationV2{
       if(action==='select'){this.selectedId=id;this.mode='read';this.draft=null;}
       else if(action==='new'){this.draft=normalizeEdition({id:uid(),title:'Nova edição',status:'draft',pageCount:2,availability:1,blocks:[]});this.mode='edit';}
       else if(action==='edit'){this.selectedId=id;this.draft=structuredClone(this.selected());this.mode='edit';}
-      else if(action==='duplicate'){const copy=structuredClone(this.selected());copy.id=uid();copy.title=`${copy.title} — cópia`;copy.number='';copy.status='draft';this.draft=copy;this.mode='edit';}
+      else if(action==='duplicate'){const copy=structuredClone(this.selected());copy.id=uid();copy.title=`${copy.title} — cópia`;copy.number='';copy.status='draft';copy.delivery='private';copy.visibility={mode:'gm',userIds:[]};this.draft=copy;this.mode='edit';}
       else if(action==='cancel'){this.mode='read';this.draft=null;}
       else if(action==='apply-template'){const form=this.element.querySelector('.qd-editor'),template=form?.elements.template?.value??'blank';this.draft=templateEdition(template,this.editionFromForm(form));}
       else if(action==='availability-step'){this.draft=this.editionFromForm(this.element.querySelector('.qd-editor'));this.draft.availability=Math.max(0,Math.min(999,this.draft.availability+Number(target.dataset.delta||0)));}
       else if(action==='add-block'){this.draft=this.editionFromForm(this.element.querySelector('.qd-editor'));this.draft.blocks.push({id:uid(),page:Math.min(this.draft.pageCount,2),section:'local',title:'',body:'',reliability:'confirmed',secretTruth:'',faction:'',consequence:'',hook:'',deadline:''});}
       else if(action==='remove-block'){this.draft=this.editionFromForm(this.element.querySelector('.qd-editor'));this.draft.blocks.splice(Number(target.dataset.index),1);}
       else if(action==='pick-image'){const FP=foundry.applications.apps.FilePicker.implementation;const current=this.editionFromForm(this.element.querySelector('.qd-editor')).image;new FP({type:'image',current,callback:path=>this.applyImage(path)}).render(true);return;}
-      else if(action==='offer'){broadcastOffer(this.selected());return;}
+      else if(action==='offer'){await releasePublication(this.selected().id,{delivery:'purchase',visibility:{mode:'players',userIds:[]}});return;}
       else if(action==='export-png'){await this.exportPages();return;}
       else if(action==='delete'){const confirmed=foundry.applications.api.DialogV2?.confirm?await foundry.applications.api.DialogV2.confirm({window:{title:'Apagar edição'},rejectClose:false,content:'<p>Apagar esta edição permanentemente?</p>'}):globalThis.confirm?.('Apagar esta edição permanentemente?');if(!confirmed)return;await removeEdition(id);this.mode='read';this.draft=null;this.selectedId='';this.flash('Edição excluída.');}
       else if(action==='buy'){const actorId=this.element.querySelector('[name="buyerActor"]')?.value,actor=game.actors.get(actorId),result=await requestPurchase(actorId,this.selected().id);this.flash(`Exemplar e Journal liberados para ${actor.name}. Saldo: ${formatCurrency(result.remaining)}.`);ui.notifications.info(this.message);}

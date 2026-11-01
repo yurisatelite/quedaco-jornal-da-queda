@@ -18,11 +18,19 @@ Rascunhos, edições salvas e seus bastidores ficam no Journal privado `QUEDAÇO
 
 ## Protocolo de integração QUEDAÇO
 
-No `ready`, o módulo publica em `game.modules.get('quedaco-jornal-da-queda').api` um descriptor com `family: 'quedaco'` e `contractVersion: 1`. As capabilities são `newspaper`, `createEdition`, `purchaseEdition` e `playerJournalDelivery`. Os métodos públicos são `open()` e `getStatus()`; o primeiro abre o Jornal e o segundo retorna somente `{ ready: true }`.
+No `ready`, o módulo publica em `game.modules.get('quedaco-jornal-da-queda').api` um descriptor com `family: 'quedaco'` e `contractVersion: 1`. As capabilities são `publicationLibrary`, `grantPublication`, `newspaper`, `createEdition`, `purchaseEdition` e `playerJournalDelivery`. Os métodos públicos são `open()`, `getStatus()`, `getAccessibleJournals()` e `releasePublication(id, options)`. O status retorna somente `{ ready: true }`; a liberação exige GM.
 
-O módulo não reconhece nem exige outros módulos para funcionar. Ele emite `quedaco:register` para que o QUEDAÇO principal ou outro módulo da família possa descobrir o descriptor quando estiver ativo. Todas as funções continuam disponíveis sozinho; nenhuma API pública expõe dados privados ou documentos do mundo.
+O módulo reconhece opcionalmente o catálogo geográfico do QUEDAÇO principal e funciona também sozinho. Ele emite `quedaco:register` para que o QUEDAÇO principal ou outro módulo da família possa descobrir o descriptor quando estiver ativo. Todas as funções continuam disponíveis sozinho; nenhuma API pública expõe dados privados ou documentos do mundo.
 
 
 ## Geografia central (0.3.6)
 
 Com QUEDAÇO 0.18.0 ativo, usa getWorldCatalog para os seletores. Novas gravações guardam IDs de região/local junto aos nomes; edições antigas continuam legíveis e não são regravadas em massa. Sem a API, conserva o catálogo local. Evento de atualização não substitui o formulário aberto.
+
+## Biblioteca de publicações (0.4.0 — Fases 1 e 2)
+
+O contrato reconhece 11 categorias e separa o estado editorial da audiência. Salvar ou duplicar não libera uma publicação. A ação “Oferecer aos jogadores” libera explicitamente a venda de um jornal disponível; somente jornais podem ser vendidos. Edições antigas começam com audiência GM, sem perder seus dados; exemplares entregues continuam no Foundry.
+
+O índice global contém apenas publicações liberadas para todos. Concessões individuais usam Journals com permissão Observer, com cópias sanitizadas e sem divulgar destinatários no setting. A API acrescenta `releasePublication(id, options)` (somente GM) e as capabilities `publicationLibrary` e `grantPublication`. O editor por categoria e os novos layouts serão implementados nas Fases 3 e 4.
+
+Veja [o progresso e os testes](docs/PROGRESSO-PUBLICACOES.md) para o contrato, uso da API e verificações pendentes no Foundry.

@@ -1,5 +1,6 @@
-import {MODULE_ID,formatCurrency,publicEdition} from './model.mjs';
-import {loadEditions} from './store.mjs';
+import {MODULE_ID,formatCurrency,normalizeEdition,publicationAccess} from './model.mjs';
+import {loadEditions,upsertEdition} from './store.mjs';
+import {deliverPublication} from './journal.mjs';
 import {ownedCharacters,purchaseEdition} from './purchase.mjs';
 import {e} from './escape.mjs';
 
@@ -11,7 +12,11 @@ async function executePurchase(payload,gameRef=game){
   return purchaseEdition(actor,edition,{gameRef,buyerUserId:payload.userId});
 }
 async function showOffer(payload,gameRef=game){
-  if(gameRef.user.isGM)return;const issue=payload.edition,actors=ownedCharacters(gameRef);if(!actors.length){ui.notifications.warn(`O QUEDAÇO “${issue.headline}” está à venda por ${formatCurrency(issue.price)}, mas você não controla uma personagem.`);return;}
+  if(gameRef.user.isGM)return;
+  // A socket offer carries only an ID; read the authoritative global index locally.
+  const issue=loadEditions(gameRef).find(item=>item.id===payload.editionId);
+  if(!issue||!publicationAccess(issue,gameRef.user).buy)return;
+  const actors=ownedCharacters(gameRef);if(!actors.length){ui.notifications.warn(`O QUEDAÇO “${issue.headline}” está à venda por ${formatCurrency(issue.price)}, mas você não controla uma personagem.`);return;}
   const Dialog=foundry.applications.api.DialogV2,content=`<form><p><strong>${e(issue.headline||issue.title)}</strong></p><p>${e(issue.summary)}</p><p>Preço: <strong>${e(formatCurrency(issue.price))}</strong></p><label>Receber com<select name="actorId">${actors.map(actor=>`<option value="${e(actor.id)}">${e(actor.name)}</option>`).join('')}</select></label></form>`;
   const actorId=await Dialog.prompt({window:{title:'Comprar o Jornal da Queda?'},content,ok:{label:`Comprar · ${formatCurrency(issue.price)}`,callback:(_event,button)=>button.form.elements.actorId.value},cancel:{label:'Agora não'}});if(!actorId)return;
   try{const result=await requestPurchase(actorId,issue.id,gameRef);ui.notifications.info(`Jornal comprado. Saldo restante: ${formatCurrency(result.remaining)}.`);}catch(error){ui.notifications.error(error.message);}
@@ -25,7 +30,27 @@ export function registerPurchaseSocket(gameRef=game){
     catch(error){gameRef.socket.emit(CHANNEL,{type:'purchase-result',requestId:payload.requestId,userId:payload.userId,ok:false,error:error.message});}
   });
 }
-export function broadcastOffer(edition,gameRef=game){if(!gameRef.user.isGM)throw Error('Somente a pessoa Mestre pode oferecer uma edição.');gameRef.socket.emit(CHANNEL,{type:'offer',edition:publicEdition(edition)});ui.notifications.info('Oferta enviada às telas dos jogadores.');}
+export async function broadcastOffer(edition,gameRef=game){
+  if(!gameRef.user.isGM)throw Error('Somente a pessoa Mestre pode oferecer uma edição.');
+  const issue=normalizeEdition(edition);
+  if(issue.kind!=='newspaper'||issue.delivery!=='purchase'||issue.status!=='available'||issue.availability<1)throw Error('Esta publicação não permite compra.');
+  await upsertEdition({...issue,visibility:{mode:'players',userIds:[]}},gameRef);
+  gameRef.socket.emit(CHANNEL,{type:'offer',editionId:issue.id});ui.notifications.info('Oferta enviada às telas dos jogadores.');
+}
+
+// GM-only commands; no player socket request can show or grant a document.
+export async function releasePublication(id,options={},gameRef=game){
+  if(!gameRef.user?.isGM)throw Error('Somente a pessoa Mestre pode liberar publicações.');
+  const original=loadEditions(gameRef).find(issue=>issue.id===id);if(!original)throw Error('Publicação não encontrada.');
+  const delivery=options.delivery??'private';
+  const issue=normalizeEdition({...original,delivery,visibility:options.visibility??{mode:'gm',userIds:[]}});
+  if(issue.delivery!==delivery)throw Error('Entrega não permitida para este tipo de publicação.');
+  if(delivery==='purchase')return broadcastOffer(issue,gameRef);
+  let journal=null;
+  if(['show','grant'].includes(delivery))journal=await deliverPublication(gameRef,issue,{userIds:issue.visibility.userIds,actor:gameRef.actors?.get?.(options.actorId)});
+  await upsertEdition(issue,gameRef);
+  return journal;
+}
 export async function requestPurchase(actorId,editionId,gameRef=game){
   if(gameRef.user.isGM)return executePurchase({actorId,editionId,userId:gameRef.user.id},gameRef);
   if(!primaryGM(gameRef))throw Error('A pessoa Mestre precisa estar conectada para concluir a compra.');const id=requestId();
