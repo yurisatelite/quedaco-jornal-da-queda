@@ -18,3 +18,12 @@ test('compras simultâneas não gastam duas vezes o mesmo saldo',async()=>{
   const results=await Promise.allSettled([purchaseEdition(actor,EXAMPLE_EDITION,options),purchaseEdition(actor,EXAMPLE_EDITION,options)]);
   assert.equal(results.filter(result=>result.status==='fulfilled').length,1);assert.equal(items,1);assert.equal(walletTotal(actor.system.currency),0);
 });
+
+test('data da compra usa o dia atual; falha do Calendário não desfaz uma entrega concluída',async()=>{
+  let created;
+  const actor={type:'character',isOwner:true,system:{currency:{t:5}},testUserPermission:()=>true,async update(change){this.system.currency=change['system.currency'];},async createEmbeddedDocuments(_type,sources){created=sources[0];return [{}];}};
+  const api={family:'quedaco',contractVersion:1,capabilities:{calendar:true},getCurrentDate:()=>({absoluteDay:100,day:11,cycleName:'Vida',year:0}),getTimelines:()=>({activeId:'main'}),linkJournalToDay:async()=>{throw Error('Falha temporária');}};
+  const gameRef={...fakeGame,modules:new Map([['quedaco-calendario',{active:true,api}]])};
+  const result=await purchaseEdition(actor,{...EXAMPLE_EDITION,calendarDate:{absoluteDay:5}},{gameRef,journalGrant:async()=>({uuid:'JournalEntry.j1'})});
+  assert.equal(created.flags['quedaco-jornal-da-queda'].purchasedAt.absoluteDay,100);assert.equal(result.calendar.registered,false);assert.equal(result.remaining,3);assert.equal(walletTotal(actor.system.currency),3);
+});

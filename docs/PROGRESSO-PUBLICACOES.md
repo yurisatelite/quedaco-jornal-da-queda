@@ -37,3 +37,8 @@ Pendentes dentro do Foundry 13: testar com dois clientes a atualização do índ
 - Fase 3: seletor de tipo/entrega/audiência, versão dos jogadores e ações explícitas no editor. Concessão por usuário/dono já disponível na API, ainda sem esses novos controles de tela.
 - Fase 4: layouts de boletim/cartaz, dossiê, registro e cartão técnico.
 - Fase 5: referências com permissão, Calendário e Criador de Monstros.
+
+
+## Atualização 03/11/2026 — v0.5.0
+
+Fases 3 e 4 implementadas na oficina visual em seis etapas, com onze modelos e layouts por formato. A Fase 5 já inclui seleção de dias e registro de compra por API do Calendário; referências especializadas e Criador de Monstros permanecem futuras. Ver `CRIADOR-VISUAL.md` para escopo e verificações no Foundry.

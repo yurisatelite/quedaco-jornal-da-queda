@@ -38,7 +38,7 @@ export function normalizeEdition(edition={}){
   if(kind==='encounter-card'){visibility.mode='gm';visibility.userIds=[];}
   const playerBlocks=(Array.isArray(edition.playerBlocks)?edition.playerBlocks:[]).map(normalizeBlock).map(({id,page,section,title,body})=>({id,page,section,title,body}));
   const links=(Array.isArray(edition.links)?edition.links:[]).filter(link=>['actor','scene','quest','publication'].includes(link?.kind)&&typeof link.uuid==='string').map(link=>({kind:link.kind,uuid:text(link.uuid),label:text(link.label)}));
-  return {kind,delivery,visibility,playerSummary:text(edition.playerSummary),playerBlocks,links,id:text(edition.id)||uid(),title:text(edition.title)||'Edição sem título',number:text(edition.number),date:text(edition.date),region:text(edition.region),place:text(edition.place),regionId:text(edition.regionId),placeId:text(edition.placeId),vendor:text(edition.vendor),writer:text(edition.writer),availability:legacyAvailability?1:integer(edition.availability,0,999),price:integer(edition.price),status,pageCount,features,headline:text(edition.headline),subtitle:text(edition.subtitle),summary:text(edition.summary),image:text(edition.image)||'modules/quedaco-jornal-da-queda/assets/road-north.svg',blocks:Array.from(edition.blocks??[]).map(normalizeBlock).filter(block=>block.title||block.body),gmNotes:text(edition.gmNotes)};
+  return {writerPortrait:text(edition.writerPortrait),vendorPortrait:text(edition.vendorPortrait),writerId:text(edition.writerId),vendorId:text(edition.vendorId),calendarDate:edition.calendarDate&&Number.isSafeInteger(edition.calendarDate.absoluteDay)?Object.fromEntries(Object.entries(edition.calendarDate).filter(([key,value])=>['absoluteDay','year','cycle','cycleName','day','mode','yearDays','repetition','weekday','hour','minute','second'].includes(key)&&['string','number'].includes(typeof value))):null,kind,delivery,visibility,playerSummary:text(edition.playerSummary),playerBlocks,links,id:text(edition.id)||uid(),title:text(edition.title)||'Edição sem título',number:text(edition.number),date:text(edition.date),region:text(edition.region),place:text(edition.place),regionId:text(edition.regionId),placeId:text(edition.placeId),vendor:text(edition.vendor),writer:text(edition.writer),availability:legacyAvailability?1:integer(edition.availability,0,999),price:integer(edition.price),status,pageCount,features,headline:text(edition.headline),subtitle:text(edition.subtitle),summary:text(edition.summary),image:text(edition.image)||'modules/quedaco-jornal-da-queda/assets/road-north.svg',blocks:Array.from(edition.blocks??[]).map(normalizeBlock).filter(block=>block.title||block.body),gmNotes:text(edition.gmNotes)};
 }
 
 export function templateEdition(templateId='blank',base={}){
@@ -58,12 +58,12 @@ export function publicEdition(edition){
   if(issue.kind==='encounter-card')return null;
   const blocks=issue.kind==='newspaper'?issue.blocks:issue.playerBlocks;
   const copy={};
-  for(const key of ['id','kind','delivery','title','number','date','region','place','regionId','placeId','writer','status','pageCount'])copy[key]=issue[key];
+  for(const key of ['id','kind','delivery','title','number','date','region','place','regionId','placeId','writer','writerPortrait','vendorId','calendarDate','status','pageCount'])copy[key]=issue[key];
   copy.visibility={mode:issue.visibility.mode==='players'?'players':'gm',userIds:[]};
   copy.links=[];
   copy.headline=issue.title;
   copy.subtitle='';copy.image='';copy.features=[];copy.vendor='';copy.price=0;copy.availability=0;
-  if(issue.kind==='newspaper')for(const key of ['headline','subtitle','image','features','vendor','price','availability'])copy[key]=issue[key];
+  if(issue.kind==='newspaper')for(const key of ['headline','subtitle','image','features','vendor','vendorPortrait','price','availability'])copy[key]=issue[key];
   copy.summary=issue.kind==='newspaper'?issue.summary:issue.playerSummary;
   copy.playerSummary=issue.playerSummary;
   copy.blocks=blocks.map(({id,page,section,title,body})=>({id,page,section,title,body}));

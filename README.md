@@ -1,5 +1,7 @@
 # QUEDAÇO - Jornal da Queda
 
+Na v0.5.0, a edição usa um criador visual de seis etapas, com modelos preenchidos por formato, galerias de NPCs civis, conversa com montador local, capas regionais, calendário opcional e apresentação do vendedor aos jogadores. Consulte [o guia e as limitações de validação](docs/CRIADOR-VISUAL.md).
+
 Terceiro módulo independente da família QUEDAÇO para Foundry VTT 13 e Skyfall RPG 1.0.1.
 
 Ele acrescenta um botão de jornal à barra lateral. A pessoa Mestre cria edições de uma a três páginas, associa região Geopaf, localidade, NPC escritor opcional, vendedor, tiragem e preço, e separa o texto público das notas secretas. Regiões e localidades ficam disponíveis em listas; escritor e vendedor usam os NPCs já existentes na mesa, priorizando a região escolhida. Há modelos para Avisos & Ofícios, Notícias locais, Presságio e Comércio, além dos destaques de notícia quente, procurado e rumores. A capa aceita seleção ou arraste de imagem e cada página pode ser exportada em PNG.

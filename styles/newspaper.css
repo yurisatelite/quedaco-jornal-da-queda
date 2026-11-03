@@ -147,3 +147,56 @@
   .qd-app .qd-shell { display: block; }
   .qd-app .qd-paper { width: 210mm; max-width: none; min-height: 297mm; margin: 0; box-shadow: none; break-after: page; }
 }
+
+/* Visual creation workshop. */
+.qd-app .qd-wizard-header { padding: 16px; border: 1px solid #42697b; border-radius: 10px; background: linear-gradient(130deg,#102b39,#192431); }
+.qd-app .qd-wizard-header > span { color: #cbb986; font: 11px Georgia,serif; letter-spacing: .16em; }
+.qd-app .qd-wizard-header h2 { margin: 8px 0 12px; }
+.qd-app .qd-wizard progress { width: 100%; height: 8px; accent-color: #44d7f2; }
+.qd-app .qd-wizard-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.qd-app .qd-wizard-nav button[aria-current="step"] { color: #06151c; background: #44d7f2; }
+.qd-app .qd-choice-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(180px,100%),1fr)); gap: 12px; margin: 16px 0; }
+.qd-app .qd-wizard .qd-choice-grid > button { display: grid; align-content: start; justify-items: start; gap: 8px; padding: 16px; text-align: left; min-width: 0; }
+.qd-app .qd-choice-grid > button i { font-size: 24px; color: #cdbd8a; }
+.qd-app .qd-choice-grid small { color: #a4bdc9; line-height: 1.4; }
+.qd-app .qd-wizard button[aria-pressed="true"] { border-color: #44d7f2; background: #164252; box-shadow: inset 0 0 0 1px #44d7f2; }
+.qd-app .qd-region-dot { width: 28px; height: 6px; border-radius: 3px; }
+.qd-app .qd-roster, .qd-app .qd-calendar-picker, .qd-app .qd-player-copy { margin-top: 18px; padding: 12px; border: 1px solid #3a6172; border-radius: 8px; }
+.qd-app .qd-npc-gallery { display: grid; grid-template-columns: repeat(auto-fill,minmax(120px,1fr)); gap: 10px; max-height: 370px; overflow: auto; margin-top: 12px; padding: 4px; }
+.qd-app .qd-wizard .qd-npc-gallery > button { display: flex; align-items: center; flex-direction: column; gap: 7px; padding: 12px; }
+.qd-app .qd-npc-gallery img { width: 64px; height: 64px; object-fit: cover; border-radius: 50%; border: 2px solid #b5a67a; }
+.qd-app .qd-npc-gallery strong, .qd-app .qd-npc-gallery small { overflow-wrap: anywhere; }
+.qd-app .qd-day-grid { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 8px; margin: 12px 0; }
+.qd-app .qd-composer { display: grid; gap: 12px; padding: 16px; border-radius: 10px; background: #071c28; border: 1px solid #42697b; margin-bottom: 16px; }
+.qd-app .qd-chat-log { max-height: 180px; overflow: auto; }
+.qd-app .qd-chat-log:empty { display: none; }
+.qd-app .qd-chat-log p { padding: 10px; background: #17323e; border-radius: 8px; overflow-wrap: anywhere; }
+.qd-app .qd-wizard label { display: grid; min-width: 0; gap: 6px; margin: 8px 0; }
+.qd-app .qd-wizard label.qd-feature { display: flex; }
+.qd-app .qd-wizard textarea, .qd-app .qd-wizard input:not([type="checkbox"]), .qd-app .qd-wizard select { width: 100%; min-width: 0; max-width: 100%; color: #e8f6ff; background: #13212e; border: 1px solid #426074; border-radius: 5px; padding: 8px; height: auto; }
+.qd-app .qd-wizard textarea { min-height: 100px; resize: vertical; }
+.qd-app .qd-wizard details { margin: 12px 0; }
+.qd-app .qd-wizard summary { cursor: pointer; line-height: 1.5; }
+.qd-app .qd-document { min-height: 720px; }
+.qd-app .qd-document-header { padding: 16px 0; border-bottom: 3px double #806844; text-align: left; }
+.qd-app .qd-document-header h1 { color: #382d20; font: 700 30px/1.2 Georgia,serif; margin: 14px 0; }
+.qd-app .qd-document-header small { letter-spacing: .1em; }
+.qd-app .qd-document-lead { font: 16px/1.6 Georgia,serif; }
+.qd-app .qd-document-image { display: block; width: 100%; height: 200px; object-fit: cover; margin-bottom: 16px; filter: sepia(.3); }
+.qd-app .qd-document-sections { display: grid; gap: 12px; margin-bottom: 20px; }
+.qd-app .qd-layout-bulletin { text-align: center; }
+.qd-app .qd-layout-encounter { min-height: 0; max-width: 600px; }
+.qd-app .qd-gm-seal { display: block; color: #8c3326; padding: 8px 0; }
+.qd-sale-dialog { max-width: min(560px,95vw); max-height: 95dvh; background: #101d29; color: #e8f6ff; }
+.qd-sale-dialog::backdrop { background: #0009; backdrop-filter: blur(8px); }
+.qd-sale-dialog .window-content { overflow: auto; }
+.qd-sale-stage { text-align: center; padding: 16px; }
+.qd-sale-portrait { display: block; width: 150px; height: 150px; object-fit: cover; border: 3px solid #cdbd8a; border-radius: 50%; margin: 0 auto 16px; }
+.qd-sale-kicker { font: 12px Georgia,serif; letter-spacing: .12em; color: #cdbd8a; }
+.qd-sale-stage h2, .qd-sale-stage h3 { overflow-wrap: anywhere; }
+.qd-sale-price { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 18px 0; font-size: 28px; }
+.qd-coin { display: inline-flex; width: 40px; height: 40px; justify-content: center; align-items: center; border: 3px double currentColor; border-radius: 50%; font-size: 24px; }
+.qd-coin.is-gold { color: #edc361; background: #6b4d17; }
+.qd-coin.is-silver { color: #d8e2ed; background: #4b5865; }
+.qd-sale-dialog [data-action="ok"] { min-height: 52px; font-size: 19px; color: #071923; background: #44d7f2; border: 1px solid #b5eaff; }
+.qd-sale-stage select { display: block; width: 100%; max-width: 100%; margin-top: 8px; }
