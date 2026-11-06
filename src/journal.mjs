@@ -1,11 +1,12 @@
 import {MODULE_ID,SECTION_LABELS,normalizeEdition,publicEdition} from './model.mjs';
 import {e,multiline} from './escape.mjs';
+import {wantedPortraitHTML} from './wanted.mjs';
 
 const FOLDER_NAME='QUEDAÇO — Jornais dos Jogadores';
 export function publicJournalHTML(edition){
   const issue=publicEdition(edition);if(!issue)throw Error('Cartões de encontro são exclusivos da pessoa Mestre.');
   const blocks=issue.blocks.map(block=>`<section><h2>${e(SECTION_LABELS[block.section])}</h2>${block.title?`<h3>${e(block.title)}</h3>`:''}<p>${multiline(block.body)}</p></section>`).join('');
-  return `<article><h1>${e(issue.headline||issue.title)}</h1>${issue.subtitle?`<h2>${e(issue.subtitle)}</h2>`:''}${issue.image?`<p><img src="${e(issue.image)}" alt="" style="max-width:100%;height:auto"></p>`:''}<p><strong>${e(issue.region)}</strong>${issue.place?` · ${e(issue.place)}`:''}</p><p>${multiline(issue.summary)}</p><hr>${blocks}<hr><p><em>A verdade chega amassada, mas chega.</em></p></article>`;
+  return `<article><h1>${e(issue.headline||issue.title)}</h1>${issue.subtitle?`<h2>${e(issue.subtitle)}</h2>`:''}${wantedPortraitHTML(issue)}${issue.image&&issue.kind!=='wanted'?`<p><img src="${e(issue.image)}" alt="" style="max-width:100%;height:auto"></p>`:''}<p><strong>${e(issue.region)}</strong>${issue.place?` · ${e(issue.place)}`:''}</p><p>${multiline(issue.summary)}</p><hr>${blocks}<hr><p><em>A verdade chega amassada, mas chega.</em></p></article>`;
 }
 
 export async function ensurePurchasedJournal(gameRef,edition,userIds=[]){

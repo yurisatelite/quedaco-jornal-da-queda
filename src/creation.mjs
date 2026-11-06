@@ -2,12 +2,14 @@ import {normalizeEdition,uid} from './model.mjs';
 import {PUBLICATION_KINDS} from './publication-policy.mjs';
 import {REGIONS} from './geography.mjs';
 
-export function civilianActors(gameRef=globalThis.game){
-  return Array.from(gameRef?.actors??[]).filter(actor=>actor.type==='character'&&!actor.hasPlayerOwner&&!actor.flags?.quedaco?.monster&&!actor.flags?.quedaco?.threat).map(actor=>{
+export function civilianActors(gameRef=globalThis.game,{includePlayers=false}={}){
+  return Array.from(gameRef?.actors??[]).filter(actor=>actor.type==='character'&&(includePlayers||!actor.hasPlayerOwner)&&!actor.flags?.quedaco?.monster&&!actor.flags?.quedaco?.threat).map(actor=>{
     const npc=actor.flags?.quedaco?.npc??{};
     return {id:actor.id,name:String(actor.name??''),regionId:String(npc.regionId??''),img:actor.prototypeToken?.texture?.src||actor.img||'icons/svg/mystery-man.svg',role:String(npc.role??'Habitante'),vendor:!!npc.shop};
   }).filter(actor=>actor.name);
 }
+// A player character can be wanted, without becoming a writer or newspaper seller.
+export const wantedActors=(gameRef=globalThis.game)=>civilianActors(gameRef,{includePlayers:true});
 export function defaultRegionImage(regionId=''){
   return `modules/quedaco-jornal-da-queda/assets/regions/${REGIONS.some(region=>region.id===regionId)?regionId:'default'}.svg`;
 }

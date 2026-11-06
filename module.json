@@ -2,10 +2,10 @@
   "id": "quedaco-jornal-da-queda",
   "title": "QUEDAÇO - Jornal da Queda",
   "description": "Edições regionais, rumores e notícias compráveis para campanhas de Skyfall RPG.",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "url": "https://github.com/yurisatelite/quedaco-jornal-da-queda",
   "manifest": "https://github.com/yurisatelite/quedaco-jornal-da-queda/releases/latest/download/module.json",
-  "download": "https://github.com/yurisatelite/quedaco-jornal-da-queda/releases/download/v0.5.1/quedaco-jornal-da-queda.zip",
+  "download": "https://github.com/yurisatelite/quedaco-jornal-da-queda/releases/download/v0.5.2/quedaco-jornal-da-queda.zip",
   "authors": [
     {
       "name": "Yuri"
@@ -38,8 +38,9 @@
   "styles": [
     "styles/quedaco-ui.css",
     "styles/newspaper.css",
-    "styles/quedaco-family.css"
-  , "styles/quedaco-palette.css"],
+    "styles/quedaco-family.css",
+    "styles/quedaco-palette.css"
+  ],
   "languages": [
     {
       "lang": "pt-BR",

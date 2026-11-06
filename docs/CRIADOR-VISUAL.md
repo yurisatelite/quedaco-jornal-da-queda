@@ -31,3 +31,12 @@ Pendente: conferir no Foundry 13 com duas sessões o modal/backdrop, Font Awesom
 ID `quedaco-jornal-da-queda`, `contractVersion: 1`. Capabilities preservadas: `publicationLibrary`, `grantPublication`, `newspaper`, `createEdition`, `purchaseEdition`, `playerJournalDelivery`. Métodos preservados: `open`, `getStatus`, `getAccessibleJournals`, `releasePublication` (exige GM).
 
 Integrações opcionais: cadastro geográfico do principal e Calendário. O editor, os modelos, o arquivo, as galerias locais e a compra funcionam sem outros módulos QUEDAÇO. Permanecem futuras as referências especializadas e a integração com Criador de Monstros da Fase 5.
+
+
+## v0.5.2 — pessoa procurada — 06/11/2026
+
+O formato Cartaz de procurado acrescenta à etapa Pessoas uma galeria exclusiva para escolher o alvo. Habitantes e personagens de jogador podem ser procurados; ameaças continuam fora da galeria. A seleção copia somente nome e imagem, sem estatísticas nem biografia. Escritor e vendedor mantêm suas seleções independentes.
+
+Nome, retrato, motivo, última localização e recompensa são campos explícitos do cartaz. É possível preencher uma pessoa sem Actor e escolher uma imagem via FilePicker. O retrato aparece no cartaz, na prévia dos jogadores e no Journal sanitizado. A referência interna ao Actor permanece privada. Limpar o procurado não muda escritor/vendedor.
+
+A paleta que já estava nos arquivos locais foi preservada sem modificação. Testes desta atualização usam somente dados falsos: 68 passando; lint CSS, pacote e diff verificados. Pendente conferir no Foundry o FilePicker, a imagem selecionada e a entrega a outro cliente.
